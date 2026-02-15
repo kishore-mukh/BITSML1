@@ -20,7 +20,8 @@ models = {
     "Logistic Regression": joblib.load(os.path.join(MODEL_DIR, "Logistic_Regression.pkl")),
     "Decision Tree": joblib.load(os.path.join(MODEL_DIR, "Decision_Tree.pkl")),
     "KNN": joblib.load(os.path.join(MODEL_DIR, "KNN.pkl")),
-    "Naive Bayes": joblib.load(os.path.join(MODEL_DIR, "Naive_Bayes.pkl"))
+    "Naive Bayes": joblib.load(os.path.join(MODEL_DIR, "Naive_Bayes.pkl")),
+    "XGBoost": joblib.load(os.path.join(MODEL_DIR, "XGBoost.pkl"))
 }
 
 scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
