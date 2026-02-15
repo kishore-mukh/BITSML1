@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     accuracy_score, roc_auc_score, precision_score,
     recall_score, f1_score, matthews_corrcoef
@@ -20,10 +20,8 @@ df = pd.read_csv("winequality-white.csv", sep=";")
 
 TARGET = "quality"
 X = df.drop(columns=[TARGET])
-y_raw = df[TARGET]
-
-label_encoder = LabelEncoder()
-y = label_encoder.fit_transform(y_raw)
+y = df["quality"]
+y = y - y.min()
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y,
@@ -44,7 +42,7 @@ models = {
     "KNN": KNeighborsClassifier(n_neighbors=5),
     "Naive Bayes": GaussianNB(),
     "Random Forest": RandomForestClassifier(n_estimators=200, random_state=42),
-    "XGBoost": XGBClassifier(objective="multi:softprob", num_class=len(np.unique(y)), eval_metric="mlogloss", random_state=42)
+    "XGBoost": XGBClassifier(objective="multi:softprob", num_class=y.nunique(), eval_metric="mlogloss", random_state=42)
 }
 
 results = []
