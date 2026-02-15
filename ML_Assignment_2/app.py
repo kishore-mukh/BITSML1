@@ -1,68 +1,51 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import os
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix, classification_report
 
+QUALITY_MIN = 3
 st.set_page_config(
-    page_title="ML Assignment 2 – Wine Quality",
-    layout="wide"
+    page_title="Wine Quality Prediction",
+    layout="centered"
 )
 
-st.title("Wine Quality Classification – ML Assignment 2")
+st.title("Wine Quality Prediction App")
+st.write("Upload wine chemical properties to predict wine quality.")
 
-metrics_df = pd.read_csv("model/model_metrics.csv")
-scaler = joblib.load("model/scaler.pkl")
-label_encoder = joblib.load("model/label_encoder.pkl")
+MODEL_DIR = "model"
 
-st.sidebar.header("Model Selection")
+models = {
+    "Logistic Regression": joblib.load(os.path.join(MODEL_DIR, "Logistic_Regression.pkl")),
+    "Decision Tree": joblib.load(os.path.join(MODEL_DIR, "Decision_Tree.pkl")),
+    "KNN": joblib.load(os.path.join(MODEL_DIR, "KNN.pkl")),
+    "Naive Bayes": joblib.load(os.path.join(MODEL_DIR, "Naive_Bayes.pkl")),
+    "Random Forest": joblib.load(os.path.join(MODEL_DIR, "Random_Forest.pkl")),
+    "XGBoost": joblib.load(os.path.join(MODEL_DIR, "XGBoost.pkl"))
+}
 
-model_name = st.sidebar.selectbox(
-    "Choose a classification model",
-    metrics_df["Model"].tolist()
-)
+scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
 
-model_path = f"model/{model_name.replace(' ', '_')}.pkl"
-model = joblib.load(model_path)
-st.header("Upload Test Dataset (CSV)")
-uploaded_file = st.file_uploader(
-    "Upload winequality-white.csv or test split CSV",
-    type=["csv"]
-)
+model_name = st.selectbox("Select a model", list(models.keys()))
+model = models[model_name]
+
+uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 
 if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file, sep=";")
-    TARGET = "quality"
-    X = df.drop(columns=[TARGET])
-    y_true_raw = df[TARGET]
-    y_true = label_encoder.transform(y_true_raw)
-    if model_name in ["Logistic Regression", "KNN"]:
-        X = scaler.transform(X)
-    y_pred = model.predict(X)
-    st.subheader("Model Performance Metrics")
-    st.dataframe(metrics_df[metrics_df["Model"] == model_name])
-    st.subheader("Confusion Matrix")
-    cm = confusion_matrix(y_true, y_pred)
-    fig, ax = plt.subplots(figsize=(6, 5))
-    sns.heatmap(
-        cm,
-        annot=True,
-        fmt="d",
-        cmap="Blues",
-        ax=ax
-    )
-    ax.set_xlabel("Predicted")
-    ax.set_ylabel("Actual")
-    st.pyplot(fig)
-    st.subheader("Classification Report")
-    report = classification_report(
-        y_true,
-        y_pred,
-        zero_division=0
-    )
-    st.text(report)
-else:
-    st.info("Please upload a CSV file to begin.")
-    
+    df = pd.read_csv(uploaded_file)
+    st.subheader("Uploaded Data Preview")
+    st.dataframe(df.head())
+    X = df.copy()
+    X_scaled = scaler.transform(X)
+    y_pred_shifted = model.predict(X_scaled)
+    y_pred = y_pred_shifted + QUALITY_MIN
+    y_prob = model.predict_proba(X_scaled)
+    confidence = np.max(y_prob, axis=1)
+    results = df.copy()
+    results["Predicted Quality"] = y_pred
+    results["Confidence"] = confidence
+
+    st.subheader("Prediction Results")
+    st.dataframe(results)
+
+    st.success("Prediction completed successfully!")
