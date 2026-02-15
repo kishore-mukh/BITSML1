@@ -13,7 +13,8 @@ st.set_page_config(
 st.title("Wine Quality Prediction App")
 st.write("Upload wine chemical properties to predict wine quality.")
 
-MODEL_DIR = "model"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "model")
 
 models = {
     "Logistic Regression": joblib.load(os.path.join(MODEL_DIR, "Logistic_Regression.pkl")),
